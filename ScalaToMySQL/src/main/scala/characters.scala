@@ -1,6 +1,9 @@
 import scala.io.StdIn
 import util.control.Breaks._
 import scala.Console.{BOLD, RESET, UNDERLINED}
+//import scala.util.Random
+/*val random = new Random()
+  val x = random.nextInt(10)*/
 
 object characters extends App {
   val player = new toon()
@@ -9,18 +12,21 @@ object characters extends App {
 
   println("You are a Roman warrior who has just fallen in battle " +
     "and your spirit has been transferred to the underworld. Fight to survive!")
-  while (player.isAlive) {
-    for (i <- 0 to 10) {
-      println(s"Your Stats: ${BOLD}Health: ${player.health}\t Attack: ${player.attack}\t Defense: ${player.defense}${RESET}")
-      val checkUserFight = StdIn.readLine(s"Do you wish to fight ${enemies(i).name}? " +
-        s"${BOLD}Health: ${enemies(i).health}\t Attack: ${enemies(i).attack}\t Defense: ${enemies(i).defense}${RESET}\n")
-      if (checkUserFight.contains("y") || checkUserFight.contains("Y")) {
-        fight(player, enemies(i))
+  GameplayLoop()
+
+  def GameplayLoop(player: toon = player, enemies: List[toon] = enemies) : Unit = {
+    while (player.isAlive) {
+      for (i <- 0 to 10) {
+        println(s"Your Stats: ${BOLD}Health: ${player.health}\t Attack: ${player.attack}\t Defense: ${player.defense}${RESET}")
+        val checkUserFight = StdIn.readLine(s"Do you wish to fight ${enemies(i).name}? " +
+          s"${BOLD}Health: ${enemies(i).health}\t Attack: ${enemies(i).attack}\t Defense: ${enemies(i).defense}${RESET}\n")
+        if (checkUserFight.contains("y") || checkUserFight.contains("Y")) {
+          fight(player, enemies(i))
+        }
+        else println(s"You have decided to run from ${enemies(i).name}")
       }
-      else println(s"You have decided to run from ${enemies(i).name}")
     }
   }
-
 
   def combat(attacker: toon, defender: toon) = { //combat sequence
     val damage = attacker.attack - defender.defense
