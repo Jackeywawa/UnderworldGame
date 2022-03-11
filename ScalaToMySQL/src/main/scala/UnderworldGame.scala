@@ -13,6 +13,7 @@ object UnderworldGame extends App{
   val connection:Connection = DriverManager.getConnection(url, username, password)
   val statement = connection.createStatement()
 
+  //set up for gameplay loop
   var gameIsActive = true;
   val player = new toon()
   val boar = new boar(); val wolf = new wolf(); val harpy = new harpy(); val centaur = new centaur(); val minotaur = new minotaur(); val siren = new siren(); val lion = new lion(); val hydra = new hydra(); val dragon = new dragon(); val friend = new oldFriend()
@@ -39,6 +40,7 @@ object UnderworldGame extends App{
         println(s"\nYour Stats: ${BOLD}Health: ${player.health}\t Attack: ${player.attack}\t Defense: ${player.defense}$RESET")
         val checkUserFight = StdIn.readLine(s"A wild ${enemies(i).name} has appeared! Do you wish to fight?\n" +
           s"${BOLD}Health: ${enemies(i).health}\t Attack: ${enemies(i).attack}\t Defense: ${enemies(i).defense}$RESET\n")
+        insertIntoAnswer(checkUserFight)
         if (checkUserFight.contains("y") || checkUserFight.contains("Y")) {
           fight(player, enemies(i))
         }
@@ -53,10 +55,11 @@ object UnderworldGame extends App{
           "It appears to be a gate of some sort, surrounded by land with signs of life that contrasted the bleakness of the Underworld.\n" +
           "Upon drawing closer, you realize it is the very same gate that led to your hometown in life and see a familiar face.\n" +
           "It is your best friend who had grown up with you, fought by your side for years, and ultimately stayed with you to the bitter end.\n" +
-          "Suddenly, a voice fills your head: \"In order to reach paradise, you must slay the one who stands in your path.\n")
+          "Suddenly, a voice fills your head: \"In order to reach paradise, you must slay the one who stands in your path.\"\n")
         println(s"\nYour Stats: ${BOLD}Health: ${player.health}\t Attack: ${player.attack}\t Defense: ${player.defense}${RESET}")
         val checkFinalFight = StdIn.readLine(s"${BOLD}Health: ${friend.health}\t Attack: ${friend.attack}\t Defense: ${friend.defense}${RESET}\n" +
           s"Will you fight this last battle?\n")
+        insertIntoAnswer(checkFinalFight)
         if (checkFinalFight.contains("y") || checkFinalFight.contains("Y")) {
           fight(player, friend)
         }
@@ -112,6 +115,16 @@ object UnderworldGame extends App{
     println(s"${character.name} has leveled up! All stats increased by 1")
     insertIntoPlayerLevel(character.level)
   }
+  def insertIntoAnswer(answer: String) : Unit = {
+    val insertIntoAnswer =
+      s"""
+         |insert into playerAnswers (answer) values (?)
+         |""".stripMargin
+    val preparedStmtLevel = connection.prepareStatement(insertIntoAnswer)
+    preparedStmtLevel.setString(1, s"${answer}")
+    //preparedStmtLevel.setString(2, s"${foreignId}")
+    preparedStmtLevel.execute
+  }
   def insertIntoPlayerLevel(pLevel: Int) : Unit = {
     val insertIntoLevel =
       s"""
@@ -147,7 +160,7 @@ object UnderworldGame extends App{
   }
 }
 
-
+//player class
 class toon() {
   var isAlive = true;
   var health = 20; var attack = 10; var defense = 5; var level = 1
@@ -155,6 +168,7 @@ class toon() {
   var name = "Player"
 }
 
+//enemies inheriting properties from player class
 class boar() extends toon {
   this.health = 10; this.attack = 7; this.defense = 2
   this.battleHealth = this.health
