@@ -1,3 +1,5 @@
+import UnderworldGame.{connection}
+
 import scala.io.StdIn
 import util.control.Breaks._
 import scala.Console.{BOLD, RESET, UNDERLINED}
@@ -16,39 +18,44 @@ object characters extends App {
     "\nWith a smile on your face, you gallop into the sun, leaving all of your past troubles to be at peace at last." +
     "\nTHE END"
 
-  println("You are a Roman warrior who has just fallen in battle " +
-    "and your spirit has been transferred to the underworld. Fight to survive!")
   GameplayLoop()
 
   def GameplayLoop(player: toon = player, enemies: List[toon] = enemies, endingText: String = endingText) : Unit = {
+    println("You are a Roman warrior who has just fallen in battle " +
+      "and your spirit has been transferred to the underworld. Fight to survive!")
     while (player.isAlive) {
-      for (i <- 0 until enemies.length) {
+      for (i <- 0 until enemies.length-1) {
         println(s"\nYour Stats: ${BOLD}Health: ${player.health}\t Attack: ${player.attack}\t Defense: ${player.defense}${RESET}")
         val checkUserFight = StdIn.readLine(s"A wild ${enemies(i).name} has appeared! Do you wish to fight?\n" +
           s"${BOLD}Health: ${enemies(i).health}\t Attack: ${enemies(i).attack}\t Defense: ${enemies(i).defense}${RESET}\n")
         if (checkUserFight.contains("y") || checkUserFight.contains("Y")) {
-          fight(player, enemies(i))
+          fight(player, enemies(i), i)
         }
         else println(s"You have decided to run from ${enemies(i).name}")
+        insertIntoRemainingHP(player.health, i)
+        //add remaining health insert to sql function here
       }
+      println("After encountering many hellish foes that you would only imagine in your worst nightmares, you see something strange in the distance.\n" +
+        "It appears to be a gate of some sort, surrounded by land with signs of life that contrasted the bleakness of the Underworld.\n" +
+        "Upon drawing closer, you realize it is the very same gate that led to your hometown in life and ")
       player.isAlive = false;
     }
     println(endingText)
   }
 
-  def combat(attacker: toon, defender: toon) = { //combat sequence
+  def combat(attacker: toon, defender: toon, loopIndex: Int) = { //combat sequence
     val damage = attacker.attack - defender.defense
     defender.battleHealth -= damage
-    if (defender.battleHealth <= 0) defender.battleHealth = 0
+    if (defender.battleHealth <= 0) defender.battleHealth = 0     //prevents overkill value from being displayed
     println(s" ${attacker.name} attacks!")
     print(s"${defender.name} takes $damage damage! ${defender.name} has ${defender.battleHealth} HP left!")
     if (defender.battleHealth <= 0) {
       println(s"\n${BOLD}${defender.name} has died!")
       defender.isAlive = false
-      //add remaining health insert to sql here
+      insertIntoRemainingHP(attacker.battleHealth, loopIndex) //add remaining health insert to sql function here
       attacker.battleHealth = attacker.health   //reset health
       if (attacker.name == "Player") {
-        levelUp(attacker)
+        levelUp(attacker, loopIndex)
       }
       else {
         println(s"${BOLD}GAME OVER!")
@@ -56,25 +63,48 @@ object characters extends App {
       }
     }
   }
-  def fight(attacker: toon, defender: toon) : Unit = { //turn based
+  def fight(attacker: toon, defender: toon, loopIndex: Int) : Unit = { //turn based system
     while (attacker.isAlive && defender.isAlive) {
-      combat(attacker, defender)
+      combat(attacker, defender, loopIndex)
       if(defender.isAlive) {
-        combat(defender, attacker)
+        combat(defender, attacker, loopIndex)
       }
     }
   }
-  def levelUp(character: toon) = {
+  def levelUp(character: toon, loopIndex: Int) = {
     character.level += 1
     character.attack += 1
     character.defense += 1
     character.health += 1
     character.battleHealth = character.health
     println(s"${character.name} has leveled up! All stats increased by 1")
+    insertIntoPlayerLevel(character.level, loopIndex)
     //add level insert to here
   }
-}
+  def insertIntoPlayerLevel(pLevel: Int, foreignId: Int) : Unit = {
+    val insertIntoLevel =
+      s"""
+         |insert into playerLevel (level, monsters_id) values (?,?)
+         |""".stripMargin
+    val preparedStmtLevel = connection.prepareStatement(insertIntoLevel)
+    preparedStmtLevel.setString(1, s"${pLevel}")
+    preparedStmtLevel.setString(2, s"${foreignId}")
+    preparedStmtLevel.execute
+    }
+  def insertIntoRemainingHP(remaining: Int, foreignId: Int) : Unit = {
+    val insertIntoHP =
+      s"""
+         |insert into remainingHP (health, monsters_id) values (?,?)
+         |""".stripMargin
+    val preparedStmt = connection.prepareStatement(insertIntoHP)
+    preparedStmt.setString(1, s"${remaining}")
+    preparedStmt.setString(2, s"${foreignId}")
+    preparedStmt.execute
+    }
+  }
 
+
+/*
 class toon() {
   var isAlive = true;
   var health = 20; var attack = 10; var defense = 5; var level = 1
@@ -128,7 +158,7 @@ class dragon() extends toon {
   this.name = "Eldwyrm"
 }
 class oldFriend() extends toon {
-  this.health = 60; this.attack = 20; this.defense = 15
+  this.health = 60; this.attack = 20; this.defense = 12
   this.battleHealth = this.health
   this.name = "Old Friend"
-}
+}*/
