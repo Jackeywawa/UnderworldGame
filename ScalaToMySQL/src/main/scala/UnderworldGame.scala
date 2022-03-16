@@ -26,8 +26,9 @@ object UnderworldGame extends App{
     s"\n${BOLD}${UNDERLINED}THE END$RESET"
   val badEndingText = "Whether it was cowardice or weakness, you turn away from your last foe and chance of salvation. You slink back into the darkness, damning yourself to spend eternity in the Underworld.\n" +
     s"\n${BOLD}${UNDERLINED}THE END$RESET"
+  val titleScreen = s"\t\t\t\t${BOLD}${UNDERLINED} WELCOME TO UNDERWORLD, A TURN-BASED GAME CREATED IN SCALA! $RESET"
 
-
+  println(titleScreen)
   GameplayLoop()
 
   connection.close()
@@ -57,7 +58,7 @@ object UnderworldGame extends App{
           "It is your best friend who had grown up with you, fought by your side for years, and ultimately stayed with you to the bitter end.\n" +
           "Suddenly, a voice fills your head: \"In order to reach paradise, you must slay the one who stands in your path.\"\n")
         println(s"\nYour Stats: ${BOLD}Health: ${player.health}\t Attack: ${player.attack}\t Defense: ${player.defense}${RESET}")
-        val checkFinalFight = StdIn.readLine(s"${BOLD}Health: ${friend.health}\t Attack: ${friend.attack}\t Defense: ${friend.defense}${RESET}\n" +
+        val checkFinalFight = StdIn.readLine(s"Their stats:\t${BOLD}Health: ${friend.health}\t Attack: ${friend.attack}\t Defense: ${friend.defense}${RESET}\n" +
           s"Will you fight this last battle?\n")
         insertIntoAnswer(checkFinalFight)
         if (checkFinalFight.contains("y") || checkFinalFight.contains("Y")) {
@@ -210,12 +211,12 @@ class hydra() extends toon {
   this.name = "Lernaean Hydra"
 }
 class dragon() extends toon {
-  this.health = 50; this.attack = 16; this.defense = 9
+  this.health = 50; this.attack = 20; this.defense = 15
   this.battleHealth = this.health
   this.name = "Eldwyrm"
 }
 class oldFriend() extends toon {
-  this.health = 30; this.attack = 20; this.defense = 10
+  this.health = 30; this.attack = 20; this.defense = 9
   this.battleHealth = this.health
   this.name = "Old Friend"
 }
